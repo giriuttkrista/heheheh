@@ -1,0 +1,1894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CookSense AI — Futuristic Cooking Assistant</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --neon-purple: #9D4EDD;
+    --neon-blue: #00BBF9;
+    --neon-pink: #FF4D8D;
+    --neon-green: #00F5A0;
+    --neon-orange: #FF8C00;
+    --bg: #0D0D0D;
+    --bg2: #111118;
+    --bg3: #16161F;
+    --glass: rgba(255,255,255,0.04);
+    --glass2: rgba(255,255,255,0.08);
+    --border: rgba(157,78,221,0.3);
+    --text: #E8E8FF;
+    --text-dim: #888aaa;
+    --card-shadow: 0 0 30px rgba(157,78,221,0.15);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Rajdhani', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* GRID BACKGROUND */
+  body::before {
+    content:'';
+    position:fixed;
+    inset:0;
+    background-image:
+      linear-gradient(rgba(157,78,221,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(157,78,221,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events:none;
+    z-index:0;
+  }
+
+  /* ANIMATED ORBS */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+    animation: orbFloat 8s ease-in-out infinite;
+  }
+  .orb1 { width:400px; height:400px; background:rgba(157,78,221,0.12); top:-100px; right:-100px; }
+  .orb2 { width:300px; height:300px; background:rgba(0,187,249,0.08); bottom:20%; left:-80px; animation-delay:-3s; }
+  .orb3 { width:200px; height:200px; background:rgba(255,77,141,0.08); bottom:-50px; right:30%; animation-delay:-5s; }
+
+  @keyframes orbFloat {
+    0%,100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-30px) scale(1.05); }
+  }
+
+  /* LAYOUT */
+  .app-wrapper { position:relative; z-index:1; max-width:480px; margin:0 auto; padding-bottom:100px; }
+
+  /* TOP BAR */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 20px 10px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: linear-gradient(180deg, rgba(13,13,13,0.98) 80%, transparent);
+    backdrop-filter: blur(10px);
+  }
+
+  .logo {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 18px;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--neon-purple), var(--neon-blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 1px;
+  }
+
+  .logo span {
+    background: linear-gradient(135deg, var(--neon-pink), var(--neon-orange));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .topbar-right { display:flex; gap:10px; align-items:center; }
+
+  .icon-btn {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--glass);
+    display: flex; align-items:center; justify-content:center;
+    cursor: pointer;
+    font-size: 18px;
+    transition: all 0.3s;
+    backdrop-filter: blur(10px);
+  }
+  .icon-btn:hover { border-color: var(--neon-purple); box-shadow: 0 0 15px rgba(157,78,221,0.4); }
+
+  /* PAGE SYSTEM */
+  .page { display: none; padding: 0 16px; animation: fadeIn 0.3s ease; }
+  .page.active { display: block; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 100%; max-width: 480px;
+    background: rgba(13,13,13,0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(157,78,221,0.2);
+    display: flex;
+    padding: 10px 0 16px;
+    z-index: 200;
+  }
+
+  .nav-item {
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+    padding: 6px 0;
+    border-radius: 12px;
+    margin: 0 4px;
+    position: relative;
+  }
+
+  .nav-item .nav-icon { font-size: 22px; transition: all 0.3s; }
+  .nav-item .nav-label {
+    font-size: 10px;
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 0.5px;
+    color: var(--text-dim);
+    transition: all 0.3s;
+  }
+
+  .nav-item.active .nav-label { color: var(--neon-purple); }
+  .nav-item.active .nav-icon { filter: drop-shadow(0 0 8px var(--neon-purple)); transform: scale(1.1); }
+  .nav-item.active::before {
+    content:'';
+    position:absolute;
+    bottom: -10px; left: 50%;
+    transform: translateX(-50%);
+    width: 30px; height: 2px;
+    background: var(--neon-purple);
+    border-radius: 2px;
+    box-shadow: 0 0 10px var(--neon-purple);
+  }
+
+  /* SECTION TITLES */
+  .section-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    margin: 24px 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title::after {
+    content:'';
+    flex:1;
+    height:1px;
+    background: linear-gradient(90deg, rgba(157,78,221,0.3), transparent);
+  }
+
+  /* GLASS CARD */
+  .glass-card {
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .glass-card::before {
+    content:'';
+    position:absolute;
+    inset:0;
+    background: linear-gradient(135deg, rgba(157,78,221,0.05), transparent);
+    pointer-events:none;
+  }
+  .glass-card:hover { border-color: rgba(157,78,221,0.5); box-shadow: var(--card-shadow); }
+
+  /* HERO SECTION */
+  .hero {
+    padding: 20px 0 10px;
+    text-align: center;
+  }
+  .hero-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    color: var(--text-dim);
+    letter-spacing: 3px;
+    margin-bottom: 6px;
+  }
+  .hero-sub {
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.2;
+    background: linear-gradient(135deg, #fff, var(--neon-purple), var(--neon-blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* QUICK CATEGORIES */
+  .categories-scroll {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scrollbar-width: none;
+  }
+  .categories-scroll::-webkit-scrollbar { display:none; }
+
+  .cat-pill {
+    flex-shrink: 0;
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1px solid rgba(157,78,221,0.3);
+    background: var(--glass);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.3s;
+    display: flex; align-items:center; gap:6px;
+  }
+  .cat-pill:hover, .cat-pill.active {
+    border-color: var(--neon-purple);
+    background: rgba(157,78,221,0.15);
+    box-shadow: 0 0 15px rgba(157,78,221,0.2);
+    color: white;
+  }
+
+  /* RECIPE CARD */
+  .recipe-card {
+    background: var(--glass);
+    border: 1px solid rgba(157,78,221,0.2);
+    border-radius: 20px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+  }
+  .recipe-card:hover {
+    border-color: var(--neon-purple);
+    transform: translateY(-4px);
+    box-shadow: 0 10px 40px rgba(157,78,221,0.2);
+  }
+
+  .recipe-card-img {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    background: linear-gradient(135deg, #1a1030, #0a1a2e);
+    display: flex; align-items:center; justify-content:center;
+    font-size: 60px;
+    position: relative;
+  }
+
+  .recipe-card-img .img-emoji {
+    font-size: 60px;
+    filter: drop-shadow(0 0 20px rgba(157,78,221,0.6));
+    animation: pulse 3s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%,100% { transform:scale(1); }
+    50% { transform:scale(1.05); }
+  }
+
+  .recipe-badge {
+    position:absolute;
+    top:10px; right:10px;
+    background: rgba(157,78,221,0.8);
+    backdrop-filter:blur(10px);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-family: 'Orbitron', sans-serif;
+    font-weight:600;
+    letter-spacing:0.5px;
+  }
+
+  .recipe-card-body { padding: 14px; }
+  .recipe-card-name {
+    font-weight: 700;
+    font-size: 17px;
+    margin-bottom: 8px;
+  }
+  .recipe-meta {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .recipe-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .recipe-meta-item span { font-size: 14px; }
+
+  /* HORIZONTAL SCROLL CARDS */
+  .hscroll { display:flex; gap:12px; overflow-x:auto; padding-bottom:8px; scrollbar-width:none; }
+  .hscroll::-webkit-scrollbar { display:none; }
+
+  .hcard {
+    flex-shrink:0;
+    width: 160px;
+    background: var(--glass);
+    border: 1px solid rgba(157,78,221,0.2);
+    border-radius:16px;
+    overflow:hidden;
+    cursor:pointer;
+    transition: all 0.3s;
+  }
+  .hcard:hover { border-color: var(--neon-purple); transform:scale(1.03); }
+  .hcard-img { height:90px; display:flex; align-items:center; justify-content:center; font-size:36px;
+    background: linear-gradient(135deg, #1a0d2e, #0d1a2e); }
+  .hcard-body { padding:10px; }
+  .hcard-name { font-weight:700; font-size:13px; margin-bottom:4px; }
+  .hcard-sub { font-size:11px; color:var(--text-dim); }
+
+  /* INGREDIENT PAGE */
+  .ingredient-list { display:flex; flex-direction:column; gap:8px; }
+
+  .ingredient-item {
+    display:flex; align-items:center; gap:12px;
+    background: var(--glass);
+    border: 1px solid rgba(157,78,221,0.2);
+    border-radius: 12px;
+    padding: 12px 14px;
+    animation: slideIn 0.3s ease;
+    transition: all 0.3s;
+  }
+
+  @keyframes slideIn {
+    from { opacity:0; transform:translateX(-20px); }
+    to { opacity:1; transform:translateX(0); }
+  }
+
+  .ingredient-item:hover { border-color: rgba(157,78,221,0.4); }
+
+  .ing-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: rgba(157,78,221,0.15);
+    display:flex; align-items:center; justify-content:center;
+    font-size:18px;
+    flex-shrink:0;
+  }
+
+  .ing-name {
+    flex:1;
+    font-weight:600;
+    font-size:15px;
+  }
+
+  .ing-qty {
+    font-size:12px;
+    color:var(--text-dim);
+    font-family:'Share Tech Mono', monospace;
+  }
+
+  .ing-del {
+    width:28px; height:28px;
+    border-radius:8px;
+    background: rgba(255,77,141,0.1);
+    border: 1px solid rgba(255,77,141,0.2);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    font-size:14px;
+    transition:all 0.3s;
+  }
+  .ing-del:hover { background:rgba(255,77,141,0.3); border-color:var(--neon-pink); }
+
+  /* INPUTS */
+  .input-row {
+    display:flex; gap:10px; margin:16px 0;
+  }
+
+  .neon-input {
+    flex:1;
+    background: var(--glass);
+    border: 1px solid rgba(157,78,221,0.3);
+    border-radius: 12px;
+    padding: 12px 16px;
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    outline: none;
+    transition: all 0.3s;
+  }
+  .neon-input::placeholder { color: var(--text-dim); }
+  .neon-input:focus {
+    border-color: var(--neon-purple);
+    box-shadow: 0 0 15px rgba(157,78,221,0.2), inset 0 0 10px rgba(157,78,221,0.05);
+  }
+
+  /* BUTTONS */
+  .btn {
+    display:flex; align-items:center; justify-content:center;
+    gap:8px;
+    padding: 12px 20px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn::before {
+    content:'';
+    position:absolute;
+    inset:-2px;
+    background: linear-gradient(135deg, var(--neon-purple), var(--neon-blue));
+    border-radius: 14px;
+    z-index:-1;
+    opacity:0;
+    transition:opacity 0.3s;
+  }
+  .btn:hover::before { opacity:0.3; }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--neon-purple), #6023B0);
+    color: white;
+    box-shadow: 0 4px 20px rgba(157,78,221,0.4);
+  }
+  .btn-primary:hover { box-shadow: 0 6px 30px rgba(157,78,221,0.6); transform: translateY(-2px); }
+
+  .btn-outline {
+    background: transparent;
+    border: 1px solid rgba(157,78,221,0.4);
+    color: var(--text);
+  }
+  .btn-outline:hover { border-color: var(--neon-purple); background: rgba(157,78,221,0.1); }
+
+  .btn-pink {
+    background: linear-gradient(135deg, var(--neon-pink), #AA1050);
+    color: white;
+    box-shadow: 0 4px 20px rgba(255,77,141,0.3);
+  }
+
+  .btn-blue {
+    background: linear-gradient(135deg, var(--neon-blue), #0066AA);
+    color: white;
+    box-shadow: 0 4px 20px rgba(0,187,249,0.3);
+  }
+
+  /* BIG CREATE BUTTON */
+  .create-btn {
+    width: 100%;
+    padding: 18px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--neon-purple), var(--neon-blue));
+    border: none;
+    color: white;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    cursor: pointer;
+    margin: 20px 0;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+    box-shadow: 0 6px 30px rgba(157,78,221,0.5), 0 0 60px rgba(157,78,221,0.1);
+  }
+  .create-btn::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+    transform: rotate(45deg) translateX(-100%);
+    transition: transform 0.6s;
+  }
+  .create-btn:hover::before { transform: rotate(45deg) translateX(100%); }
+  .create-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 40px rgba(157,78,221,0.7); }
+  .create-btn:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
+
+  /* LOADING */
+  .loading-screen {
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding: 60px 20px;
+    gap: 20px;
+  }
+  .loading-screen.show { display:flex; }
+
+  .loading-ring {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    border: 3px solid rgba(157,78,221,0.2);
+    border-top-color: var(--neon-purple);
+    border-right-color: var(--neon-blue);
+    animation: spin 1s linear infinite;
+    position:relative;
+  }
+  .loading-ring::before {
+    content:'🧑‍🍳';
+    position:absolute;
+    top:50%; left:50%;
+    transform:translate(-50%,-50%);
+    font-size:28px;
+  }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  .loading-text {
+    font-family:'Orbitron', sans-serif;
+    font-size:13px;
+    color:var(--text-dim);
+    letter-spacing:2px;
+    text-align:center;
+    animation: blink 1.5s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .loading-dots { display:flex; gap:8px; }
+  .loading-dot {
+    width:8px; height:8px;
+    border-radius:50%;
+    animation: dotBounce 1.2s ease-in-out infinite;
+  }
+  .loading-dot:nth-child(1) { background:var(--neon-purple); animation-delay:0s; }
+  .loading-dot:nth-child(2) { background:var(--neon-blue); animation-delay:0.2s; }
+  .loading-dot:nth-child(3) { background:var(--neon-pink); animation-delay:0.4s; }
+  @keyframes dotBounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-12px)} }
+
+  /* RECIPE RESULTS */
+  .results-grid { display:flex; flex-direction:column; gap:16px; }
+
+  /* DETAILED RECIPE PAGE */
+  .detail-page {
+    display:none;
+    position:fixed;
+    inset:0;
+    background: var(--bg);
+    z-index:500;
+    overflow-y:auto;
+    animation: slideUp 0.3s ease;
+  }
+  .detail-page.show { display:block; }
+  @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+
+  .detail-header {
+    position:sticky;
+    top:0;
+    z-index:10;
+    padding:16px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background: rgba(13,13,13,0.95);
+    backdrop-filter:blur(20px);
+    border-bottom:1px solid rgba(157,78,221,0.2);
+  }
+
+  .back-btn {
+    width:40px; height:40px;
+    border-radius:12px;
+    border:1px solid rgba(157,78,221,0.3);
+    background:var(--glass);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    font-size:20px;
+    transition:all 0.3s;
+  }
+  .back-btn:hover { border-color:var(--neon-purple); }
+
+  .detail-hero {
+    height:220px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:90px;
+    background: linear-gradient(135deg, #1a0d2e, #0d1a2e, #001025);
+    position:relative;
+    overflow:hidden;
+  }
+  .detail-hero::before {
+    content:'';
+    position:absolute;
+    inset:0;
+    background: radial-gradient(circle at 50% 50%, rgba(157,78,221,0.2), transparent 70%);
+  }
+  .detail-hero-emoji {
+    position:relative;
+    z-index:1;
+    filter:drop-shadow(0 0 40px rgba(157,78,221,0.8));
+    animation:float 4s ease-in-out infinite;
+  }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-15px)} }
+
+  .detail-content { padding:20px 16px; }
+
+  .detail-name {
+    font-family:'Orbitron', sans-serif;
+    font-size:22px;
+    font-weight:900;
+    background: linear-gradient(135deg, #fff, var(--neon-purple));
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    margin-bottom:16px;
+    line-height:1.2;
+  }
+
+  .stats-row {
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+    margin-bottom:20px;
+  }
+
+  .stat-box {
+    background:var(--glass);
+    border:1px solid rgba(157,78,221,0.2);
+    border-radius:12px;
+    padding:10px;
+    text-align:center;
+  }
+  .stat-val {
+    font-family:'Orbitron', sans-serif;
+    font-size:14px;
+    font-weight:700;
+    color:var(--neon-purple);
+    display:block;
+  }
+  .stat-lbl { font-size:10px; color:var(--text-dim); display:block; margin-top:2px; }
+
+  .detail-section-title {
+    font-family:'Orbitron', sans-serif;
+    font-size:11px;
+    color:var(--text-dim);
+    letter-spacing:2px;
+    margin:20px 0 10px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .detail-section-title::after { content:''; flex:1; height:1px; background:linear-gradient(90deg,rgba(157,78,221,0.3),transparent); }
+
+  .ingredient-check-list { display:flex; flex-direction:column; gap:8px; }
+  .ing-check-item {
+    display:flex; align-items:center; gap:10px;
+    padding:10px 14px;
+    background:var(--glass);
+    border:1px solid rgba(157,78,221,0.15);
+    border-radius:10px;
+    cursor:pointer;
+    transition:all 0.3s;
+  }
+  .ing-check-item.checked { border-color:rgba(0,245,160,0.4); background:rgba(0,245,160,0.05); }
+  .ing-check-item.checked .check-box { background:var(--neon-green); border-color:var(--neon-green); color:white; }
+  .check-box {
+    width:22px; height:22px;
+    border-radius:6px;
+    border:2px solid rgba(157,78,221,0.4);
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px;
+    flex-shrink:0;
+    transition:all 0.3s;
+  }
+  .ing-check-name { font-weight:600; font-size:14px; flex:1; }
+  .ing-check-qty { font-size:12px; color:var(--text-dim); font-family:'Share Tech Mono', monospace; }
+
+  .step-list { display:flex; flex-direction:column; gap:12px; }
+  .step-item {
+    display:flex; gap:14px;
+    padding:14px;
+    background:var(--glass);
+    border:1px solid rgba(157,78,221,0.15);
+    border-radius:14px;
+    position:relative;
+    overflow:hidden;
+    transition:all 0.3s;
+  }
+  .step-item.done { border-color:rgba(0,245,160,0.3); background:rgba(0,245,160,0.03); }
+  .step-item::before {
+    content:'';
+    position:absolute;
+    left:0; top:0; bottom:0;
+    width:3px;
+    background:linear-gradient(180deg,var(--neon-purple),var(--neon-blue));
+    border-radius:0 2px 2px 0;
+  }
+  .step-num {
+    font-family:'Orbitron', sans-serif;
+    font-size:16px;
+    font-weight:900;
+    color:var(--neon-purple);
+    flex-shrink:0;
+    width:24px;
+  }
+  .step-text { font-size:14px; line-height:1.6; }
+
+  .action-pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
+  .action-pill {
+    padding:8px 14px;
+    border-radius:20px;
+    border:1px solid rgba(157,78,221,0.3);
+    background:var(--glass);
+    font-size:12px;
+    font-weight:600;
+    cursor:pointer;
+    transition:all 0.3s;
+    white-space:nowrap;
+  }
+  .action-pill:hover { border-color:var(--neon-purple); background:rgba(157,78,221,0.15); }
+
+  /* NUTRITION BAR */
+  .nutrition-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .nutri-item {
+    background:var(--glass);
+    border:1px solid rgba(157,78,221,0.15);
+    border-radius:12px;
+    padding:12px;
+  }
+  .nutri-label { font-size:11px; color:var(--text-dim); margin-bottom:4px; }
+  .nutri-val { font-family:'Orbitron', sans-serif; font-size:18px; font-weight:700; }
+  .nutri-bar { height:4px; border-radius:4px; margin-top:6px; background:rgba(255,255,255,0.1); overflow:hidden; }
+  .nutri-fill { height:100%; border-radius:4px; animation:fillBar 1s ease 0.5s both; }
+  @keyframes fillBar { from{width:0} }
+
+  /* HISTORY PAGE */
+  .history-list { display:flex; flex-direction:column; gap:12px; }
+  .history-item {
+    display:flex; align-items:center; gap:14px;
+    background:var(--glass);
+    border:1px solid rgba(157,78,221,0.2);
+    border-radius:14px;
+    padding:14px;
+    cursor:pointer;
+    transition:all 0.3s;
+  }
+  .history-item:hover { border-color:var(--neon-purple); background:rgba(157,78,221,0.05); }
+  .history-emoji { font-size:32px; }
+  .history-info { flex:1; }
+  .history-name { font-weight:700; font-size:15px; margin-bottom:3px; }
+  .history-date { font-size:11px; color:var(--text-dim); font-family:'Share Tech Mono', monospace; }
+  .history-badge {
+    padding:4px 10px;
+    border-radius:20px;
+    font-size:10px;
+    font-family:'Orbitron', sans-serif;
+    font-weight:600;
+    background:rgba(157,78,221,0.15);
+    border:1px solid rgba(157,78,221,0.3);
+    color:var(--neon-purple);
+  }
+
+  /* CHATBOT */
+  .chat-container {
+    display:flex; flex-direction:column;
+    height: calc(100vh - 180px);
+  }
+  .chat-messages {
+    flex:1;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    padding:12px 0;
+    scrollbar-width:none;
+  }
+  .chat-messages::-webkit-scrollbar { display:none; }
+
+  .chat-bubble {
+    max-width:85%;
+    padding:12px 16px;
+    border-radius:16px;
+    font-size:14px;
+    line-height:1.6;
+    animation:fadeIn 0.3s ease;
+  }
+  .chat-bubble.user {
+    align-self:flex-end;
+    background:linear-gradient(135deg,rgba(157,78,221,0.3),rgba(0,187,249,0.2));
+    border:1px solid rgba(157,78,221,0.4);
+    border-bottom-right-radius:4px;
+  }
+  .chat-bubble.ai {
+    align-self:flex-start;
+    background:var(--glass);
+    border:1px solid rgba(157,78,221,0.2);
+    border-bottom-left-radius:4px;
+  }
+  .chat-bubble.ai .ai-label {
+    font-family:'Orbitron', sans-serif;
+    font-size:9px;
+    color:var(--neon-purple);
+    letter-spacing:1px;
+    margin-bottom:6px;
+  }
+
+  .chat-input-row {
+    display:flex; gap:10px;
+    padding:12px 0;
+    border-top:1px solid rgba(157,78,221,0.15);
+  }
+
+  .send-btn {
+    width:44px; height:44px;
+    border-radius:12px;
+    background:linear-gradient(135deg,var(--neon-purple),var(--neon-blue));
+    border:none;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px;
+    transition:all 0.3s;
+    flex-shrink:0;
+  }
+  .send-btn:hover { transform:scale(1.05); box-shadow:0 4px 20px rgba(157,78,221,0.5); }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align:center;
+    padding:40px 20px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:12px;
+  }
+  .empty-icon { font-size:60px; animation:float 4s ease-in-out infinite; }
+  .empty-title {
+    font-family:'Orbitron', sans-serif;
+    font-size:15px;
+    color:var(--text-dim);
+    letter-spacing:1px;
+  }
+  .empty-sub { font-size:14px; color:rgba(136,138,170,0.6); }
+
+  /* NOTIFICATION */
+  .notif {
+    position:fixed;
+    top:80px;
+    left:50%;
+    transform:translateX(-50%) translateY(-100px);
+    background:rgba(13,13,13,0.95);
+    border:1px solid var(--neon-green);
+    border-radius:12px;
+    padding:12px 20px;
+    font-size:14px;
+    font-weight:600;
+    z-index:1000;
+    backdrop-filter:blur(20px);
+    box-shadow:0 4px 20px rgba(0,245,160,0.2);
+    transition:transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+    white-space:nowrap;
+    color:var(--neon-green);
+  }
+  .notif.show { transform:translateX(-50%) translateY(0); }
+
+  /* SCAN MODAL */
+  .modal-overlay {
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.85);
+    z-index:600;
+    backdrop-filter:blur(10px);
+    align-items:flex-end;
+    justify-content:center;
+  }
+  .modal-overlay.show { display:flex; }
+  .modal-sheet {
+    background:var(--bg2);
+    border:1px solid rgba(157,78,221,0.3);
+    border-radius:24px 24px 0 0;
+    padding:24px;
+    width:100%;
+    max-width:480px;
+    animation:slideUp 0.3s ease;
+  }
+  .modal-handle {
+    width:40px; height:4px;
+    border-radius:4px;
+    background:rgba(157,78,221,0.3);
+    margin:0 auto 20px;
+  }
+
+  /* TAG */
+  .tag {
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    padding:4px 10px;
+    border-radius:8px;
+    font-size:11px;
+    font-weight:700;
+    font-family:'Orbitron', sans-serif;
+    letter-spacing:0.5px;
+  }
+  .tag-purple { background:rgba(157,78,221,0.2); color:var(--neon-purple); border:1px solid rgba(157,78,221,0.3); }
+  .tag-blue { background:rgba(0,187,249,0.15); color:var(--neon-blue); border:1px solid rgba(0,187,249,0.3); }
+  .tag-pink { background:rgba(255,77,141,0.15); color:var(--neon-pink); border:1px solid rgba(255,77,141,0.3); }
+  .tag-green { background:rgba(0,245,160,0.12); color:var(--neon-green); border:1px solid rgba(0,245,160,0.3); }
+
+  /* TOOLTIP / TIP BOX */
+  .tip-box {
+    background:rgba(0,187,249,0.05);
+    border:1px solid rgba(0,187,249,0.2);
+    border-radius:12px;
+    padding:12px 14px;
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+    font-size:13px;
+    color:rgba(0,187,249,0.9);
+    line-height:1.5;
+    margin-bottom:16px;
+  }
+  .tip-icon { font-size:16px; flex-shrink:0; margin-top:1px; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width:4px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:rgba(157,78,221,0.3); border-radius:4px; }
+
+  /* MISSING INGREDIENT */
+  .missing-tag {
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    padding:3px 8px;
+    border-radius:6px;
+    font-size:11px;
+    background:rgba(255,77,141,0.15);
+    border:1px solid rgba(255,77,141,0.3);
+    color:var(--neon-pink);
+    font-weight:600;
+    margin:2px;
+  }
+
+  /* SHIMMER */
+  .shimmer {
+    background: linear-gradient(90deg,
+      rgba(157,78,221,0.1) 25%,
+      rgba(157,78,221,0.2) 50%,
+      rgba(157,78,221,0.1) 75%);
+    background-size:200% 100%;
+    animation:shimmer 1.5s infinite;
+    border-radius:8px;
+  }
+  @keyframes shimmer { to{background-position:-200% 0} }
+</style>
+</head>
+<body>
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+<div class="app-wrapper">
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="logo">Cook<span>Sense</span> <span style="font-size:11px;opacity:0.7">AI</span></div>
+    <div class="topbar-right">
+      <div class="icon-btn" onclick="openChat()">💬</div>
+      <div class="icon-btn" id="themeBtn" onclick="notify('Dark mode is default — embrace the neon! 🌙')">🌙</div>
+    </div>
+  </div>
+
+  <!-- PAGE: HOME -->
+  <div class="page active" id="page-home">
+    <div class="hero">
+      <div class="hero-title">WHAT CAN YOU COOK?</div>
+      <div class="hero-sub">AI-Powered Culinary<br>Intelligence</div>
+    </div>
+
+    <div class="tip-box">
+      <span class="tip-icon">⚡</span>
+      <span>Add ingredients to <strong>Ingredients tab</strong> and let the AI generate 5 amazing recipes for you instantly!</span>
+    </div>
+
+    <div class="section-title">QUICK CATEGORIES</div>
+    <div class="categories-scroll" id="categoriesScroll">
+      <div class="cat-pill active" onclick="setCategory(this,'Quick Meals')">⚡ Quick Meals</div>
+      <div class="cat-pill" onclick="setCategory(this,'Protein Meals')">💪 Protein Meals</div>
+      <div class="cat-pill" onclick="setCategory(this,'Budget Meals')">💰 Budget Meals</div>
+      <div class="cat-pill" onclick="setCategory(this,'Healthy Meals')">🥗 Healthy Meals</div>
+      <div class="cat-pill" onclick="setCategory(this,'Comfort Foods')">🤗 Comfort Foods</div>
+      <div class="cat-pill" onclick="setCategory(this,'Sweet Foods')">🍰 Sweet Foods</div>
+      <div class="cat-pill" onclick="setCategory(this,'Hostel Meals')">🎓 Hostel Meals</div>
+      <div class="cat-pill" onclick="setCategory(this,'Lazy Meals')">😴 Lazy Meals</div>
+    </div>
+
+    <div class="section-title">TRENDING RECIPES</div>
+    <div class="hscroll" id="trendingScroll">
+      <div class="hcard" onclick="quickOpenRecipe('Butter Chicken','🍛','25 min','Easy','450 cal')">
+        <div class="hcard-img">🍛</div>
+        <div class="hcard-body"><div class="hcard-name">Butter Chicken</div><div class="hcard-sub">⏱ 25 min · Medium</div></div>
+      </div>
+      <div class="hcard" onclick="quickOpenRecipe('Cheese Toast','🥪','10 min','Easy','280 cal')">
+        <div class="hcard-img">🥪</div>
+        <div class="hcard-body"><div class="hcard-name">Cheese Toast</div><div class="hcard-sub">⏱ 10 min · Easy</div></div>
+      </div>
+      <div class="hcard" onclick="quickOpenRecipe('Egg Fried Rice','🍳','15 min','Easy','380 cal')">
+        <div class="hcard-img">🍳</div>
+        <div class="hcard-body"><div class="hcard-name">Egg Fried Rice</div><div class="hcard-sub">⏱ 15 min · Easy</div></div>
+      </div>
+      <div class="hcard" onclick="quickOpenRecipe('Maggi Masala','🍜','5 min','Very Easy','320 cal')">
+        <div class="hcard-img">🍜</div>
+        <div class="hcard-body"><div class="hcard-name">Maggi Masala</div><div class="hcard-sub">⏱ 5 min · Very Easy</div></div>
+      </div>
+      <div class="hcard" onclick="quickOpenRecipe('Paneer Bhurji','🧀','20 min','Easy','350 cal')">
+        <div class="hcard-img">🧀</div>
+        <div class="hcard-body"><div class="hcard-name">Paneer Bhurji</div><div class="hcard-sub">⏱ 20 min · Easy</div></div>
+      </div>
+    </div>
+
+    <div class="section-title">RECENTLY VIEWED</div>
+    <div id="recentList">
+      <div class="empty-state" style="padding:20px">
+        <div style="font-size:40px">👀</div>
+        <div class="empty-title">No recent activity</div>
+        <div class="empty-sub">Generate recipes to see them here</div>
+      </div>
+    </div>
+
+    <div class="section-title">ADVANCED MODES</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+      <div class="glass-card" style="cursor:pointer" onclick="notify('🎓 Hostel Mode: Kettle, microwave & rice cooker recipes activated!')">
+        <div style="font-size:28px;margin-bottom:6px">🎓</div>
+        <div style="font-weight:700;font-size:14px">Hostel Mode</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-top:4px">Kettle & Microwave</div>
+      </div>
+      <div class="glass-card" style="cursor:pointer" onclick="notify('💰 Budget Mode: Cheap & filling meals prioritized!')">
+        <div style="font-size:28px;margin-bottom:6px">💰</div>
+        <div style="font-weight:700;font-size:14px">Budget Mode</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-top:4px">₹50 meals</div>
+      </div>
+      <div class="glass-card" style="cursor:pointer" onclick="notify('🥗 Leftover Mode: Expiring ingredients prioritized!')">
+        <div style="font-size:28px;margin-bottom:6px">♻️</div>
+        <div style="font-weight:700;font-size:14px">Leftover Mode</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-top:4px">Zero waste cooking</div>
+      </div>
+      <div class="glass-card" style="cursor:pointer" onclick="switchPage('chat')">
+        <div style="font-size:28px;margin-bottom:6px">🤖</div>
+        <div style="font-weight:700;font-size:14px">AI Chef Chat</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-top:4px">Ask anything</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: INGREDIENTS -->
+  <div class="page" id="page-ingredients">
+    <div style="padding:20px 0 10px">
+      <div style="font-family:'Orbitron',sans-serif;font-size:20px;font-weight:900;background:linear-gradient(135deg,#fff,var(--neon-purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">My Pantry</div>
+      <div style="font-size:13px;color:var(--text-dim);margin-top:4px">Add ingredients to generate AI recipes</div>
+    </div>
+
+    <div class="tip-box">
+      <span class="tip-icon">🧠</span>
+      <span>AI auto-corrects spelling! Try "tomto", "cheeze", or "chiken" — it'll understand!</span>
+    </div>
+
+    <!-- ADD INPUT -->
+    <div class="input-row">
+      <input class="neon-input" id="ingInput" placeholder="Add ingredient (e.g. tomato, paneer...)" onkeydown="if(event.key==='Enter')addIngredient()">
+      <input class="neon-input" id="qtyInput" placeholder="Qty" style="max-width:80px;" onkeydown="if(event.key==='Enter')addIngredient()">
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:16px;">
+      <button class="btn btn-primary" onclick="addIngredient()" style="flex:1">➕ ADD</button>
+      <button class="btn btn-blue" onclick="openScanModal()">📷 SCAN</button>
+      <button class="btn btn-outline" onclick="clearIngredients()">🧹</button>
+    </div>
+
+    <!-- INGREDIENT COUNT -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div class="section-title" style="margin:0">PANTRY ITEMS</div>
+      <div id="ingCount" style="font-family:'Orbitron',sans-serif;font-size:12px;color:var(--neon-purple)">0 items</div>
+    </div>
+
+    <!-- INGREDIENT LIST -->
+    <div class="ingredient-list" id="ingredientList">
+      <div class="empty-state" id="ingEmptyState">
+        <div class="empty-icon">🥕</div>
+        <div class="empty-title">PANTRY IS EMPTY</div>
+        <div class="empty-sub">Add ingredients above to get started</div>
+      </div>
+    </div>
+
+    <!-- CREATE RECIPES BUTTON -->
+    <button class="create-btn" id="createBtn" onclick="generateRecipes()">
+      🍳 GENERATE 5 AI RECIPES
+    </button>
+
+    <!-- LOADING -->
+    <div class="loading-screen" id="loadingScreen">
+      <div class="loading-ring"></div>
+      <div class="loading-text" id="loadingText">ANALYZING INGREDIENTS...</div>
+      <div class="loading-dots">
+        <div class="loading-dot"></div>
+        <div class="loading-dot"></div>
+        <div class="loading-dot"></div>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div id="recipeResults" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:24px 0 12px;">
+        <div class="section-title" style="margin:0">AI GENERATED RECIPES</div>
+        <div id="resultCount" style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--neon-green)">5 recipes</div>
+      </div>
+      <div class="results-grid" id="resultsGrid"></div>
+    </div>
+  </div>
+
+  <!-- PAGE: HISTORY -->
+  <div class="page" id="page-history">
+    <div style="padding:20px 0 10px">
+      <div style="font-family:'Orbitron',sans-serif;font-size:20px;font-weight:900;background:linear-gradient(135deg,#fff,var(--neon-pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Recipe History</div>
+      <div style="font-size:13px;color:var(--text-dim);margin-top:4px">Your cooking journey</div>
+    </div>
+
+    <!-- STATS -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;" id="historyStats">
+      <div class="glass-card" style="text-align:center">
+        <div style="font-family:'Orbitron',sans-serif;font-size:24px;color:var(--neon-purple)" id="statTotal">0</div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:4px">Generated</div>
+      </div>
+      <div class="glass-card" style="text-align:center">
+        <div style="font-family:'Orbitron',sans-serif;font-size:24px;color:var(--neon-blue)" id="statFav">0</div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:4px">Favorites</div>
+      </div>
+      <div class="glass-card" style="text-align:center">
+        <div style="font-family:'Orbitron',sans-serif;font-size:24px;color:var(--neon-pink)" id="statSaved">0</div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:4px">Saved</div>
+      </div>
+    </div>
+
+    <div class="section-title">RECENT RECIPES</div>
+    <div class="history-list" id="historyList">
+      <div class="empty-state" id="historyEmpty">
+        <div class="empty-icon">📜</div>
+        <div class="empty-title">NO HISTORY YET</div>
+        <div class="empty-sub">Generate recipes to build your cooking history</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: CHAT -->
+  <div class="page" id="page-chat">
+    <div style="padding:20px 0 10px">
+      <div style="font-family:'Orbitron',sans-serif;font-size:20px;font-weight:900;background:linear-gradient(135deg,#fff,var(--neon-blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">AI Chef Chat</div>
+      <div style="font-size:13px;color:var(--text-dim);margin-top:4px">Ask anything about cooking</div>
+    </div>
+
+    <div class="chat-container">
+      <div class="chat-messages" id="chatMessages">
+        <div class="chat-bubble ai">
+          <div class="ai-label">⚡ COOKSENSE AI</div>
+          Namaste! I'm your AI Chef 🧑‍🍳 Ask me anything — substitutions, cooking tips, recipe ideas, nutrition info — I'm here to help you cook smarter!
+        </div>
+        <div class="chat-bubble ai">
+          <div class="ai-label">⚡ COOKSENSE AI</div>
+          Try asking:<br>
+          • "How do I make paneer at home?"<br>
+          • "What can I cook with eggs and bread?"<br>
+          • "Substitute for butter in cake?"<br>
+          • "How many calories in samosa?"
+        </div>
+      </div>
+      <div class="chat-input-row">
+        <input class="neon-input" id="chatInput" placeholder="Ask the AI Chef..." onkeydown="if(event.key==='Enter')sendChat()">
+        <button class="send-btn" onclick="sendChat()">🚀</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <div class="nav-item active" id="nav-home" onclick="switchPage('home')">
+    <div class="nav-icon">🏠</div>
+    <div class="nav-label">HOME</div>
+  </div>
+  <div class="nav-item" id="nav-ingredients" onclick="switchPage('ingredients')">
+    <div class="nav-icon">🥕</div>
+    <div class="nav-label">PANTRY</div>
+  </div>
+  <div class="nav-item" id="nav-history" onclick="switchPage('history')">
+    <div class="nav-icon">📜</div>
+    <div class="nav-label">HISTORY</div>
+  </div>
+  <div class="nav-item" id="nav-chat" onclick="switchPage('chat')">
+    <div class="nav-icon">🤖</div>
+    <div class="nav-label">AI CHEF</div>
+  </div>
+</div>
+
+<!-- DETAIL RECIPE PAGE -->
+<div class="detail-page" id="detailPage">
+  <div class="detail-header">
+    <div class="back-btn" onclick="closeDetail()">←</div>
+    <div style="flex:1;font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px" id="detailHeaderTitle">Recipe Details</div>
+    <div class="icon-btn" id="detailFavBtn" onclick="toggleFav()">🤍</div>
+  </div>
+  <div class="detail-hero">
+    <div class="detail-hero-emoji" id="detailEmoji">🍳</div>
+  </div>
+  <div class="detail-content" id="detailContent">
+    <!-- Filled by JS -->
+  </div>
+</div>
+
+<!-- SCAN MODAL -->
+<div class="modal-overlay" id="scanModal" onclick="if(event.target===this)closeScanModal()">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div style="font-family:'Orbitron',sans-serif;font-size:16px;font-weight:700;margin-bottom:16px">📷 Scan Ingredients</div>
+    <div class="tip-box">
+      <span class="tip-icon">💡</span>
+      <span>Describe what you see in your kitchen, fridge, or pantry. AI will identify the ingredients!</span>
+    </div>
+    <div style="margin-bottom:12px">
+      <textarea class="neon-input" id="scanInput" placeholder="Example: 'I see tomatoes, onions, garlic, some cheese, bread and 2 eggs in my fridge'" style="width:100%;height:120px;resize:none;font-family:'Rajdhani',sans-serif;line-height:1.5"></textarea>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-outline" onclick="closeScanModal()" style="flex:1">Cancel</button>
+      <button class="btn btn-primary" onclick="scanIngredients()" style="flex:2">🧠 AI SCAN</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOTIFICATION -->
+<div class="notif" id="notif">✅ Done!</div>
+
+<script>
+const API_KEY = 'AIzaSyBop6pDQAZfhtln9GjyZAltDJisxGZOvbU';
+const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
+
+let ingredients = JSON.parse(localStorage.getItem('cooksense_ingredients') || '[]');
+let history = JSON.parse(localStorage.getItem('cooksense_history') || '[]');
+let favorites = JSON.parse(localStorage.getItem('cooksense_favorites') || '[]');
+let currentRecipe = null;
+let currentCategory = 'Quick Meals';
+
+// ── PAGE SWITCHING ──────────────────────────────────────────
+function switchPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.getElementById('nav-' + page).classList.add('active');
+  if (page === 'history') renderHistory();
+  window.scrollTo(0,0);
+}
+
+function openChat() { switchPage('chat'); }
+function setCategory(el, cat) {
+  currentCategory = cat;
+  document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ── NOTIFICATION ────────────────────────────────────────────
+function notify(msg) {
+  const n = document.getElementById('notif');
+  n.textContent = msg;
+  n.classList.add('show');
+  setTimeout(() => n.classList.remove('show'), 3000);
+}
+
+// ── INGREDIENTS ─────────────────────────────────────────────
+function saveIngredients() {
+  localStorage.setItem('cooksense_ingredients', JSON.stringify(ingredients));
+}
+
+function renderIngredients() {
+  const list = document.getElementById('ingredientList');
+  const emptyState = document.getElementById('ingEmptyState');
+  const count = document.getElementById('ingCount');
+
+  const items = list.querySelectorAll('.ingredient-item');
+  items.forEach(i => i.remove());
+
+  count.textContent = ingredients.length + ' item' + (ingredients.length !== 1 ? 's' : '');
+
+  if (ingredients.length === 0) {
+    emptyState.style.display = 'flex';
+    return;
+  }
+  emptyState.style.display = 'none';
+
+  const emojis = ['🍅','🧅','🧄','🥚','🧀','🥩','🍗','🥕','🌽','🫚','🌶️','🍋','🥬','🍞','🧈','🥛','🍚','🫘','🥜','🍄'];
+  ingredients.forEach((ing, idx) => {
+    const div = document.createElement('div');
+    div.className = 'ingredient-item';
+    div.innerHTML = `
+      <div class="ing-icon">${emojis[idx % emojis.length]}</div>
+      <div class="ing-name">${ing.name}</div>
+      ${ing.qty ? `<div class="ing-qty">${ing.qty}</div>` : ''}
+      <div class="ing-del" onclick="removeIngredient(${idx})">✕</div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+async function addIngredient() {
+  const inp = document.getElementById('ingInput');
+  const qtyInp = document.getElementById('qtyInput');
+  let name = inp.value.trim();
+  const qty = qtyInp.value.trim();
+  if (!name) return;
+
+  // AI autocorrect for obvious typos
+  const corrections = {
+    'tomto':'tomato','tomatoe':'tomato','cheeze':'cheese','chiken':'chicken',
+    'poteto':'potato','potatoe':'potato','eg':'egg','egs':'eggs','bred':'bread',
+    'garic':'garlic','garlick':'garlic','oinon':'onion','carrot':'carrot',
+    'buuter':'butter','milkk':'milk','ricee':'rice','suggar':'sugar',
+    'onoin':'onion','panneer':'paneer','paneer':'paneer','broccli':'broccoli',
+    'lemun':'lemon','tomotoe':'tomato','mushrom':'mushroom'
+  };
+  const corrected = corrections[name.toLowerCase()];
+  if (corrected) {
+    name = corrected.charAt(0).toUpperCase() + corrected.slice(1);
+    notify(`✅ Auto-corrected to: ${name}`);
+  } else {
+    name = name.charAt(0).toUpperCase() + name.slice(1);
+  }
+
+  // Check duplicate
+  if (ingredients.find(i => i.name.toLowerCase() === name.toLowerCase())) {
+    notify('⚠️ Already in pantry!'); return;
+  }
+
+  ingredients.push({ name, qty });
+  saveIngredients();
+  inp.value = '';
+  qtyInp.value = '';
+  renderIngredients();
+  notify(`✅ Added ${name} to pantry!`);
+}
+
+function removeIngredient(idx) {
+  const name = ingredients[idx].name;
+  ingredients.splice(idx, 1);
+  saveIngredients();
+  renderIngredients();
+  notify(`🗑️ Removed ${name}`);
+}
+
+function clearIngredients() {
+  if (ingredients.length === 0) { notify('⚠️ Pantry already empty!'); return; }
+  if (confirm('Clear all ingredients?')) {
+    ingredients = [];
+    saveIngredients();
+    renderIngredients();
+    document.getElementById('recipeResults').style.display = 'none';
+    notify('🧹 Pantry cleared!');
+  }
+}
+
+// ── SCAN MODAL ──────────────────────────────────────────────
+function openScanModal() {
+  document.getElementById('scanModal').classList.add('show');
+}
+function closeScanModal() {
+  document.getElementById('scanModal').classList.remove('show');
+}
+
+async function scanIngredients() {
+  const desc = document.getElementById('scanInput').value.trim();
+  if (!desc) { notify('⚠️ Please describe what you see!'); return; }
+
+  const btn = document.querySelector('#scanModal .btn-primary');
+  btn.textContent = '🧠 SCANNING...';
+  btn.disabled = true;
+
+  try {
+    const prompt = `You are an ingredient scanner AI. The user described what they see: "${desc}"
+    
+Extract ALL ingredient names from this description. Correct any spelling mistakes. Return ONLY a JSON array like:
+["Tomato", "Onion", "Cheese", "Egg"]
+
+No explanation, just the JSON array.`;
+
+    const res = await geminiCall(prompt);
+    const clean = res.replace(/```json|```/g,'').trim();
+    const found = JSON.parse(clean);
+
+    let added = 0;
+    found.forEach(name => {
+      if (!ingredients.find(i => i.name.toLowerCase() === name.toLowerCase())) {
+        ingredients.push({ name, qty: '' });
+        added++;
+      }
+    });
+    saveIngredients();
+    renderIngredients();
+    closeScanModal();
+    document.getElementById('scanInput').value = '';
+    notify(`📷 Found & added ${added} ingredient(s)!`);
+  } catch(e) {
+    notify('❌ Scan failed. Try again!');
+  }
+
+  btn.textContent = '🧠 AI SCAN';
+  btn.disabled = false;
+}
+
+// ── GEMINI API ───────────────────────────────────────────────
+async function geminiCall(prompt) {
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.9, maxOutputTokens: 4000 }
+    })
+  });
+  if (!res.ok) throw new Error('API error ' + res.status);
+  const data = await res.json();
+  return data.candidates[0].content.parts[0].text;
+}
+
+// ── GENERATE RECIPES ─────────────────────────────────────────
+async function generateRecipes() {
+  if (ingredients.length === 0) {
+    notify('⚠️ Add at least 1 ingredient first!'); return;
+  }
+
+  const createBtn = document.getElementById('createBtn');
+  const loadingScreen = document.getElementById('loadingScreen');
+  const recipeResults = document.getElementById('recipeResults');
+  const resultsGrid = document.getElementById('resultsGrid');
+
+  createBtn.style.display = 'none';
+  loadingScreen.classList.add('show');
+  recipeResults.style.display = 'none';
+
+  const loadingMsgs = [
+    'ANALYZING INGREDIENTS...','PAIRING FLAVORS...','CRAFTING RECIPES...',
+    'OPTIMIZING NUTRITION...','FINALIZING MEALS...'
+  ];
+  let msgIdx = 0;
+  const msgInterval = setInterval(() => {
+    document.getElementById('loadingText').textContent = loadingMsgs[++msgIdx % loadingMsgs.length];
+  }, 1200);
+
+  try {
+    const ingList = ingredients.map(i => i.name + (i.qty ? ` (${i.qty})` : '')).join(', ');
+
+    const prompt = `You are CookSense AI, an expert chef. The user has these ingredients: ${ingList}
+
+Generate EXACTLY 5 diverse, realistic recipes. Return ONLY valid JSON array (no markdown, no explanation):
+
+[
+  {
+    "name": "Recipe Name",
+    "emoji": "🍳",
+    "time": "15 min",
+    "difficulty": "Easy",
+    "calories": "350 cal",
+    "protein": "18g",
+    "carbs": "45g",
+    "fats": "12g",
+    "budget": "₹80",
+    "mealType": "Breakfast",
+    "usedIngredients": ["tomato", "cheese"],
+    "missingIngredients": ["salt", "oil"],
+    "ingredients": [
+      {"name": "Tomato", "qty": "2 medium"},
+      {"name": "Cheese", "qty": "50g"}
+    ],
+    "steps": [
+      {"num": 1, "text": "Detailed step here with timing and temperature", "time": "3 min"},
+      {"num": 2, "text": "Next step", "time": "5 min"}
+    ],
+    "tips": "Useful cooking tip here",
+    "alternatives": "If no cheese, use paneer"
+  }
+]
+
+Rules:
+- Use MOSTLY the available ingredients creatively
+- Each recipe must be DIFFERENT (no similar dishes)
+- Beginner-friendly steps with good detail
+- Steps should have timing
+- Add missing common pantry items (salt, oil, water) as missingIngredients only if actually needed
+- Make recipes practical and realistic
+- Vary meal types: breakfast, lunch, dinner, snack, etc.
+- Category context: ${currentCategory}`;
+
+    const response = await geminiCall(prompt);
+    clearInterval(msgInterval);
+
+    let recipes;
+    try {
+      const clean = response.replace(/```json|```/g,'').trim();
+      const start = clean.indexOf('[');
+      const end = clean.lastIndexOf(']') + 1;
+      recipes = JSON.parse(clean.substring(start, end));
+    } catch(e) {
+      throw new Error('Parse error');
+    }
+
+    // Save to history
+    recipes.forEach(r => {
+      history.unshift({
+        name: r.name,
+        emoji: r.emoji || '🍳',
+        date: new Date().toLocaleDateString('en-IN'),
+        time: r.time,
+        mealType: r.mealType,
+        data: r
+      });
+    });
+    if (history.length > 50) history = history.slice(0, 50);
+    localStorage.setItem('cooksense_history', JSON.stringify(history));
+    updateStats();
+
+    // Update recent on home
+    updateRecentHome();
+
+    // Render results
+    resultsGrid.innerHTML = '';
+    recipes.forEach((recipe, i) => {
+      const card = createRecipeCard(recipe, i);
+      resultsGrid.appendChild(card);
+    });
+
+    loadingScreen.classList.remove('show');
+    createBtn.style.display = 'block';
+    recipeResults.style.display = 'block';
+    notify(`🎉 ${recipes.length} recipes generated!`);
+
+  } catch(e) {
+    clearInterval(msgInterval);
+    loadingScreen.classList.remove('show');
+    createBtn.style.display = 'block';
+
+    // Fallback recipes
+    const fallback = generateFallbackRecipes();
+    resultsGrid.innerHTML = '';
+    fallback.forEach((r, i) => resultsGrid.appendChild(createRecipeCard(r, i)));
+    recipeResults.style.display = 'block';
+    notify('⚠️ Used offline recipes (check your connection)');
+  }
+}
+
+function createRecipeCard(recipe, index) {
+  const labels = ['EASIEST','HEALTHIEST','TASTIEST','FASTEST','MOST CREATIVE'];
+  const colors = ['var(--neon-green)','var(--neon-blue)','var(--neon-pink)','var(--neon-orange)','var(--neon-purple)'];
+  const div = document.createElement('div');
+  div.className = 'recipe-card';
+  div.onclick = () => openRecipeDetail(recipe);
+
+  div.innerHTML = `
+    <div class="recipe-card-img" style="background:linear-gradient(135deg,${getGradient(index)})">
+      <div class="img-emoji">${recipe.emoji || '🍳'}</div>
+      <div class="recipe-badge" style="background:${colors[index]}22;border:1px solid ${colors[index]}55;color:${colors[index]}">${labels[index]}</div>
+    </div>
+    <div class="recipe-card-body">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px">
+        <div class="recipe-card-name">${recipe.name}</div>
+        <div class="tag tag-purple" style="flex-shrink:0">${recipe.mealType || 'Meal'}</div>
+      </div>
+      <div class="recipe-meta">
+        <div class="recipe-meta-item"><span>⏱</span>${recipe.time}</div>
+        <div class="recipe-meta-item"><span>📊</span>${recipe.difficulty}</div>
+        <div class="recipe-meta-item"><span>🔥</span>${recipe.calories}</div>
+        <div class="recipe-meta-item"><span>💰</span>${recipe.budget}</div>
+      </div>
+      ${recipe.missingIngredients && recipe.missingIngredients.length ? `
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(157,78,221,0.15)">
+        <div style="font-size:11px;color:var(--text-dim);margin-bottom:6px;font-family:'Orbitron',sans-serif;letter-spacing:0.5px">NEED TO BUY:</div>
+        <div>${recipe.missingIngredients.slice(0,4).map(m=>`<span class="missing-tag">+ ${m}</span>`).join('')}</div>
+      </div>` : ''}
+    </div>
+  `;
+  return div;
+}
+
+function getGradient(i) {
+  const gradients = [
+    '#1a2e1a, #0a1a0a','#1a1030, #0a1a2e','#2e1a1a, #1a0a0a',
+    '#1a1a00, #0a0a1a','#001a2e, #1a001a'
+  ];
+  return gradients[i % gradients.length];
+}
+
+// ── RECIPE DETAIL ────────────────────────────────────────────
+function openRecipeDetail(recipe) {
+  currentRecipe = recipe;
+  document.getElementById('detailPage').classList.add('show');
+  document.getElementById('detailEmoji').textContent = recipe.emoji || '🍳';
+  document.getElementById('detailHeaderTitle').textContent = recipe.name;
+
+  const isFav = favorites.includes(recipe.name);
+  document.getElementById('detailFavBtn').textContent = isFav ? '❤️' : '🤍';
+
+  const content = document.getElementById('detailContent');
+  content.innerHTML = `
+    <div class="detail-name">${recipe.name}</div>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+      <div class="tag tag-blue">⏱ ${recipe.time}</div>
+      <div class="tag tag-purple">📊 ${recipe.difficulty}</div>
+      <div class="tag tag-pink">🍽 ${recipe.mealType || 'Meal'}</div>
+      <div class="tag tag-green">💰 ${recipe.budget}</div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box"><span class="stat-val">${recipe.calories}</span><span class="stat-lbl">CALORIES</span></div>
+      <div class="stat-box"><span class="stat-val">${recipe.protein}</span><span class="stat-lbl">PROTEIN</span></div>
+      <div class="stat-box"><span class="stat-val">${recipe.carbs || '—'}</span><span class="stat-lbl">CARBS</span></div>
+      <div class="stat-box"><span class="stat-val">${recipe.fats || '—'}</span><span class="stat-lbl">FATS</span></div>
+    </div>
+
+    <div class="action-pills">
+      <div class="action-pill" onclick="modifyRecipe('healthier')">🥗 Healthier</div>
+      <div class="action-pill" onclick="modifyRecipe('faster')">⚡ Faster</div>
+      <div class="action-pill" onclick="modifyRecipe('cheaper')">💰 Cheaper</div>
+      <div class="action-pill" onclick="modifyRecipe('protein')">💪 More Protein</div>
+      <div class="action-pill" onclick="modifyRecipe('spicy')">🌶️ Spicier</div>
+      <div class="action-pill" onclick="modifyRecipe('sweet')">🍰 Sweeter</div>
+    </div>
+
+    <div class="detail-section-title">INGREDIENTS</div>
+    <div class="ingredient-check-list" id="ingChecklist">
+      ${(recipe.ingredients || []).map((ing, i) => `
+        <div class="ing-check-item" onclick="toggleCheck(this)" id="chk${i}">
+          <div class="check-box">✓</div>
+          <div class="ing-check-name">${ing.name}</div>
+          <div class="ing-check-qty">${ing.qty}</div>
+        </div>
+      `).join('')}
+    </div>
+
+    ${recipe.missingIngredients && recipe.missingIngredients.length ? `
+    <div class="detail-section-title">NEED TO BUY</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px">
+      ${recipe.missingIngredients.map(m=>`<span class="missing-tag">🛒 ${m}</span>`).join('')}
+    </div>` : ''}
+
+    <div class="detail-section-title">COOKING STEPS</div>
+    <div class="step-list" id="stepList">
+      ${(recipe.steps || []).map(step => `
+        <div class="step-item" onclick="toggleStep(this)">
+          <div class="step-num">${step.num}</div>
+          <div>
+            <div class="step-text">${step.text}</div>
+            ${step.time ? `<div style="font-size:11px;color:var(--neon-blue);margin-top:6px;font-family:'Share Tech Mono',monospace">⏱ ${step.time}</div>` : ''}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+
+    ${recipe.tips ? `
+    <div class="detail-section-title">CHEF'S TIP</div>
+    <div class="tip-box">
+      <span class="tip-icon">👨‍🍳</span>
+      <span>${recipe.tips}</span>
+    </div>` : ''}
+
+    ${recipe.alternatives ? `
+    <div class="detail-section-title">SUBSTITUTIONS</div>
+    <div class="tip-box" style="border-color:rgba(255,77,141,0.2);background:rgba(255,77,141,0.05);color:rgba(255,140,200,0.9)">
+      <span class="tip-icon">🔄</span>
+      <span>${recipe.alternatives}</span>
+    </div>` : ''}
+
+    <div style="height:30px"></div>
+  `;
+
+  window.scrollTo(0,0);
+}
+
+function quickOpenRecipe(name, emoji, time, diff, cal) {
+  openRecipeDetail({
+    name, emoji, time, difficulty: diff, calories: cal, protein: '—', carbs:'—', fats:'—',
+    budget:'₹—', mealType:'Meal', ingredients:[],
+    steps:[{num:1,text:'Loading full recipe... Please add this ingredient to your pantry and generate recipes for detailed steps!',time:''}],
+    tips:'Add ingredients and use Generate Recipes for full AI-powered instructions!',
+    alternatives:'', missingIngredients:[]
+  });
+}
+
+function closeDetail() {
+  document.getElementById('detailPage').classList.remove('show');
+}
+
+function toggleCheck(el) {
+  el.classList.toggle('checked');
+}
+
+function toggleStep(el) {
+  el.classList.toggle('done');
+  if (el.classList.contains('done')) {
+    el.style.opacity = '0.6';
+    el.querySelector('.step-num').style.color = 'var(--neon-green)';
+  } else {
+    el.style.opacity = '1';
+    el.querySelector('.step-num').style.color = 'var(--neon-purple)';
+  }
+}
+
+function toggleFav() {
+  if (!currentRecipe) return;
+  const name = currentRecipe.name;
+  const idx = favorites.indexOf(name);
+  if (idx >= 0) {
+    favorites.splice(idx, 1);
+    document.getElementById('detailFavBtn').textContent = '🤍';
+    notify('💔 Removed from favorites');
+  } else {
+    favorites.push(name);
+    document.getElementById('detailFavBtn').textContent = '❤️';
+    notify('❤️ Added to favorites!');
+  }
+  localStorage.setItem('cooksense_favorites', JSON.stringify(favorites));
+  updateStats();
+}
+
+async function modifyRecipe(type) {
+  if (!currentRecipe) return;
+  notify('🧠 AI is modifying recipe...');
+  const typeMap = {
+    'healthier':'make it healthier with less oil/sugar, more vegetables',
+    'faster':'make it faster to cook, reduce cooking time',
+    'cheaper':'make it more budget-friendly with cheaper ingredients',
+    'protein':'increase the protein content significantly',
+    'spicy':'make it spicier with more chillies and spices',
+    'sweet':'add a sweet twist to this recipe'
+  };
+
+  try {
+    const prompt = `Take this recipe "${currentRecipe.name}" and ${typeMap[type]}.
+Return a modified version as valid JSON (same structure):
+${JSON.stringify(currentRecipe)}
+Return ONLY the JSON object, no explanation.`;
+
+    const res = await geminiCall(prompt);
+    const clean = res.replace(/```json|```/g,'').trim();
+    const start = clean.indexOf('{');
+    const end = clean.lastIndexOf('}') + 1;
+    const modified = JSON.parse(clean.substring(start, end));
+    openRecipeDetail(modified);
+    notify(`✅ Recipe modified: ${type}!`);
+  } catch(e) {
+    notify('❌ Modification failed. Try again!');
+  }
+}
+
+// ── HISTORY ──────────────────────────────────────────────────
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  const empty = document.getElementById('historyEmpty');
+  const items = list.querySelectorAll('.history-item');
+  items.forEach(i => i.remove());
+
+  updateStats();
+
+  if (history.length === 0) { empty.style.display = 'flex'; return; }
+  empty.style.display = 'none';
+
+  history.slice(0, 20).forEach(h => {
+    const div = document.createElement('div');
+    div.className = 'history-item';
+    div.onclick = () => h.data && openRecipeDetail(h.data);
+    div.innerHTML = `
+      <div class="history-emoji">${h.emoji}</div>
+      <div class="history-info">
+        <div class="history-name">${h.name}</div>
+        <div class="history-date">📅 ${h.date} · ⏱ ${h.time}</div>
+      </div>
+      <div class="history-badge">${h.mealType || 'Meal'}</div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function updateStats() {
+  document.getElementById('statTotal').textContent = history.length;
+  document.getElementById('statFav').textContent = favorites.length;
+  document.getElementById('statSaved').textContent = Math.min(history.length, 5);
+}
+
+function updateRecentHome() {
+  const recentList = document.getElementById('recentList');
+  if (history.length === 0) return;
+  recentList.innerHTML = '';
+  const scroll = document.createElement('div');
+  scroll.className = 'hscroll';
+  history.slice(0,5).forEach(h => {
+    const card = document.createElement('div');
+    card.className = 'hcard';
+    card.onclick = () => h.data && openRecipeDetail(h.data);
+    card.innerHTML = `
+      <div class="hcard-img">${h.emoji}</div>
+      <div class="hcard-body"><div class="hcard-name">${h.name}</div><div class="hcard-sub">⏱ ${h.time}</div></div>
+    `;
+    scroll.appendChild(card);
+  });
+  recentList.appendChild(scroll);
+}
+
+// ── CHAT ─────────────────────────────────────────────────────
+async function sendChat() {
+  const inp = document.getElementById('chatInput');
+  const msg = inp.value.trim();
+  if (!msg) return;
+  inp.value = '';
+
+  const msgs = document.getElementById('chatMessages');
+
+  // User bubble
+  const userBubble = document.createElement('div');
+  userBubble.className = 'chat-bubble user';
+  userBubble.textContent = msg;
+  msgs.appendChild(userBubble);
+
+  // Thinking bubble
+  const thinkBubble = document.createElement('div');
+  thinkBubble.className = 'chat-bubble ai';
+  thinkBubble.innerHTML = '<div class="ai-label">⚡ COOKSENSE AI</div><div style="display:flex;gap:6px;align-items:center"><div class="loading-dot" style="width:6px;height:6px"></div><div class="loading-dot" style="width:6px;height:6px;animation-delay:0.2s"></div><div class="loading-dot" style="width:6px;height:6px;animation-delay:0.4s"></div></div>';
+  msgs.appendChild(thinkBubble);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  try {
+    const ingContext = ingredients.length ? `User's pantry: ${ingredients.map(i=>i.name).join(', ')}` : '';
+    const prompt = `You are CookSense AI, an expert chef assistant with deep culinary knowledge. Be helpful, concise, and practical.
+${ingContext}
+
+User question: ${msg}
+
+Reply in 2-4 sentences max. Be conversational, use emojis sparingly. Give practical cooking advice.`;
+
+    const res = await geminiCall(prompt);
+    thinkBubble.innerHTML = `<div class="ai-label">⚡ COOKSENSE AI</div>${res}`;
+  } catch(e) {
+    thinkBubble.innerHTML = `<div class="ai-label">⚡ COOKSENSE AI</div>Sorry, I'm having trouble connecting right now. Please check your internet and try again! 🔌`;
+  }
+
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+// ── FALLBACK RECIPES ──────────────────────────────────────────
+function generateFallbackRecipes() {
+  const ingNames = ingredients.map(i => i.name);
+  const first = ingNames[0] || 'egg';
+  return [
+    { name: first + ' Stir Fry', emoji:'🍳', time:'15 min', difficulty:'Easy', calories:'280 cal', protein:'12g', carbs:'30g', fats:'10g', budget:'₹60', mealType:'Lunch', ingredients:[{name:first,qty:'2 pcs'},{name:'Oil',qty:'1 tbsp'},{name:'Salt',qty:'to taste'}], steps:[{num:1,text:'Heat oil in a pan over medium heat',time:'2 min'},{num:2,text:'Add '+first+' and stir fry for 5-7 minutes',time:'7 min'},{num:3,text:'Season with salt and serve hot',time:'1 min'}], tips:'Don\'t overcook!', alternatives:'Add any vegetables you have', missingIngredients:['Oil','Salt'] },
+    { name: 'Quick Sandwich', emoji:'🥪', time:'10 min', difficulty:'Easy', calories:'320 cal', protein:'14g', carbs:'40g', fats:'12g', budget:'₹40', mealType:'Breakfast', ingredients:[{name:'Bread',qty:'2 slices'},{name:first,qty:'1 pc'}], steps:[{num:1,text:'Prepare the filling with '+first,time:'3 min'},{num:2,text:'Assemble sandwich with bread',time:'2 min'},{num:3,text:'Toast or serve as is',time:'2 min'}], tips:'Toast for extra crunch!', alternatives:'Use any bread available', missingIngredients:['Bread'] },
+    { name: 'Simple Salad', emoji:'🥗', time:'5 min', difficulty:'Very Easy', calories:'120 cal', protein:'4g', carbs:'15g', fats:'5g', budget:'₹30', mealType:'Snack', ingredients:[{name:first,qty:'1 cup'}], steps:[{num:1,text:'Chop '+first+' into bite-sized pieces',time:'3 min'},{num:2,text:'Add lemon juice and salt',time:'1 min'},{num:3,text:'Toss and serve',time:'1 min'}], tips:'Fresh is best!', alternatives:'Add any dressing', missingIngredients:['Lemon','Salt'] },
+    { name: 'Spicy Curry', emoji:'🍛', time:'25 min', difficulty:'Medium', calories:'380 cal', protein:'18g', carbs:'35g', fats:'15g', budget:'₹80', mealType:'Dinner', ingredients:[{name:first,qty:'200g'},{name:'Onion',qty:'1 medium'}], steps:[{num:1,text:'Heat oil, sauté onions until golden',time:'8 min'},{num:2,text:'Add '+first+' and spices',time:'5 min'},{num:3,text:'Cook covered on low heat',time:'12 min'}], tips:'Simmer on low for best flavor!', alternatives:'Any curry spice works', missingIngredients:['Onion','Spices','Oil'] },
+    { name: 'Fried Delight', emoji:'🍲', time:'20 min', difficulty:'Easy', calories:'350 cal', protein:'16g', carbs:'42g', fats:'14g', budget:'₹70', mealType:'Lunch', ingredients:[{name:first,qty:'2 pcs'},{name:'Garlic',qty:'3 cloves'}], steps:[{num:1,text:'Prepare '+first+' by washing and cutting',time:'3 min'},{num:2,text:'Heat oil and add garlic till fragrant',time:'4 min'},{num:3,text:'Add '+first+' and cook thoroughly',time:'10 min'},{num:4,text:'Season and serve hot',time:'2 min'}], tips:'High heat for crispy texture!', alternatives:'Ginger can replace garlic', missingIngredients:['Garlic','Oil','Salt'] }
+  ];
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+renderIngredients();
+updateStats();
+updateRecentHome();
+
+// Load existing history for recent
+if (history.length > 0) updateRecentHome();
+</script>
+</body>
+</html>
